@@ -246,18 +246,6 @@ class CycleGAN(BaseModel):
         else:
             return var.data.numpy()[0]
 
-    # def get_errors_string(self):
-    #
-    #     loss_G_A, loss_D_A, loss_cycle_A = list(map(lambda x: self.loss_variable2scalar(x),
-    #                                                 [self.loss_G_A, self.loss_D_A, self.loss_cycle_A]))
-    #     loss_G_B, loss_D_B, loss_cycle_B = list(map(lambda x: self.loss_variable2scalar(x),
-    #                                                 [self.loss_G_B, self.loss_D_B, self.loss_cycle_B]))
-    #
-    #     description = ('[A] G:{:.4f} D:{:.4f} Rec:{:.4f} ||'
-    #                    ' [B] G:{:.4f} D:{:.4f} Rec:{:.4f} ').format(loss_G_A, loss_D_A, loss_cycle_A,
-    #                                                                 loss_G_B, loss_D_B, loss_cycle_B)
-    #     return description
-
     def get_AB_images_triple(self):
         return torch.cat((self.real_A.data, self.fake_B.data, self.rec_A.data,
                           self.real_B.data, self.fake_A.data, self.rec_B.data))
