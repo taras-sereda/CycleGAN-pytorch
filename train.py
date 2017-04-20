@@ -9,6 +9,7 @@ import matplotlib.pyplot as plt
 
 from models.cycleGAN import CycleGAN
 from data.pairs_dataset import UnalignedDataLoader
+from util.visualizer import Visualizer
 
 parser = argparse.ArgumentParser('CycleGAN train')
 parser.add_argument('--dir_A', default='/Users/taras/datasets/horse2zebra/A')
@@ -34,6 +35,7 @@ parser.add_argument('--vis_interval', default=500, type=int)
 parser.add_argument('--log_interval', default=50, type=int)
 parser.add_argument('--num_workers', default=2, type=int)
 parser.add_argument('--shuffle', action='store_true')
+parser.add_argument('--display_id', default=1)
 args = parser.parse_args()
 
 try:
@@ -56,8 +58,10 @@ def show(img):
     npimg = img.numpy()
     plt.imshow(npimg.transpose(1, 2, 0))
 
+
 data_loader = UnalignedDataLoader(args)
 dataset = data_loader.load_data()
+visualizer = Visualizer(args)
 
 def train():
     model = CycleGAN(params=args)
@@ -67,9 +71,11 @@ def train():
         for batch_idx, inputs in enumerate(dataset):
             model.set_inputs(inputs)
             model.optimize_parameters()
-
+            e_fraction_passed = batch_idx * args.batch_size/len(dataset.data_loader_A)
             if batch_idx % args.log_interval == 0:
-                desc = model.get_errors_decription()
+                err = model.get_errors()
+                visualizer.plot_errors(err, e, e_fraction_passed)
+                desc = model.get_errors_string()
                 print('Epoch:[{}/{}] Batch:[{:10d}/{}] '.format(e, args.epochs,
                                                                 batch_idx * args.batch_size,
                                                                 len(dataset.data_loader_A)), desc)
