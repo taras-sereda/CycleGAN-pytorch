@@ -8,3 +8,7 @@ class Visualizer(object):
         idx = 1
         for label, image_numpy in visuals.iteritems():
             self.vis.image()
+
+
+    def plot_errors(self):
+        raise NotImplementedError

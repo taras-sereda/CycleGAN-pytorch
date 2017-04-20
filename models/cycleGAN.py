@@ -1,4 +1,5 @@
 import itertools
+from collections import OrderedDict
 
 import torch
 import torch.optim as optim
@@ -267,3 +268,17 @@ class CycleGAN(BaseModel):
         input_B = input['B']
         self.input_A.resize_(input_A.size()).copy_(input_A)
         self.input_B.resize_(input_B.size()).copy_(input_B)
+
+    def get_errors(self):
+        loss_G_A = self.loss_G_A.data[0]
+        loss_D_A = self.loss_D_A.data[0]
+        loss_cycle_A = self.loss_cycle_A.data[0]
+
+        loss_G_B = self.loss_G_B.data[0]
+        loss_D_B = self.loss_D_B.data[0]
+        loss_cycle_B = self.loss_cycle_B.data[0]
+
+        errors = OrderedDict([('G_A', loss_G_A), ('D_A', loss_D_A), ('cycle_A', loss_cycle_A),
+                              ('G_B', loss_G_B), ('D_B', loss_D_B), ('cycle_B', loss_cycle_B)])
+
+        return errors
