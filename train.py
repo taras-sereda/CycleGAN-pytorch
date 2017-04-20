@@ -4,16 +4,15 @@ import os
 import time
 
 import torch.utils.data
-import torchvision.transforms as transforms
-import torchvision.datasets as datasets
 import torchvision.utils as vutils
 import matplotlib.pyplot as plt
 
 from models.cycleGAN import CycleGAN
+from data.pairs_dataset import UnalignedDataLoader
 
-parser = argparse.ArgumentParser('CycleGAN')
-parser.add_argument('--dataset_dir_A', default='./data')
-parser.add_argument('--dataset_dir_B', default='./data')
+parser = argparse.ArgumentParser('CycleGAN train')
+parser.add_argument('--dir_A', default='/Users/taras/datasets/horse2zebra/A')
+parser.add_argument('--dir_B', default='/Users/taras/datasets/horse2zebra/B')
 parser.add_argument('--width', default=128, type=int)
 parser.add_argument('--height', default=128, type=int)
 parser.add_argument('--load_size', default=142, type=int)
@@ -34,6 +33,7 @@ parser.add_argument('--save_interval', default=1000, type=int)
 parser.add_argument('--vis_interval', default=500, type=int)
 parser.add_argument('--log_interval', default=50, type=int)
 parser.add_argument('--num_workers', default=2, type=int)
+parser.add_argument('--shuffle', action='store_true')
 args = parser.parse_args()
 
 try:
@@ -51,53 +51,31 @@ def set_random_seed(seed, cuda):
 
 set_random_seed(args.seed, args.cuda)
 
-dataset_A = torch.utils.data.DataLoader(
-    datasets.ImageFolder(args.dataset_dir_A,
-                         transform=transforms.Compose([
-                             transforms.Scale(size=(args.load_size, args.load_size)),
-                             transforms.RandomCrop(size=(args.height, args.width)),
-                             transforms.ToTensor()
-                         ])),
-    num_workers=args.num_workers,
-    shuffle=True)
-
-dataset_B = torch.utils.data.DataLoader(
-    datasets.ImageFolder(args.dataset_dir_B,
-                         transform=transforms.Compose([
-                             transforms.Scale(size=(args.load_size, args.load_size)),
-                             transforms.RandomCrop(size=(args.height, args.width)),
-                             transforms.ToTensor()
-                         ])),
-    num_workers=args.num_workers,
-    shuffle=True)
-
 
 def show(img):
     npimg = img.numpy()
     plt.imshow(npimg.transpose(1, 2, 0))
 
+data_loader = UnalignedDataLoader(args)
+dataset = data_loader.load_data()
 
 def train():
     model = CycleGAN(params=args)
     model.train()
     for e in range(args.epochs):
         e_begin = time.time()
-        for batch_idx, (dataA, dataB) in enumerate(zip(dataset_A, dataset_B)):
-            model.netG_A.zero_grad()
-            real_A_cpu, _ = dataA
-            real_B_cpu, _ = dataB
-            model.real_A.data.resize_(real_A_cpu.size()).copy_(real_A_cpu)
-            model.real_B.data.resize_(real_B_cpu.size()).copy_(real_B_cpu)
-            model.optimizeParameters()
+        for batch_idx, inputs in enumerate(dataset):
+            model.set_inputs(inputs)
+            model.optimize_parameters()
 
             if batch_idx % args.log_interval == 0:
-                desc = model.getErrorsDecription()
+                desc = model.get_errors_decription()
                 print('Epoch:[{}/{}] Batch:[{:10d}/{}] '.format(e, args.epochs,
-                                                                batch_idx * len(real_A_cpu),
-                                                                len(dataset_A.dataset)), desc)
+                                                                batch_idx * args.batch_size,
+                                                                len(dataset.data_loader_A)), desc)
             if batch_idx % args.vis_interval == 0:
                 imAB_gen_file = os.path.join(args.save_path, 'imAB_gen_{}_{}.jpg'.format(e, batch_idx))
-                vutils.save_image(model.getABImagesTriple(), imAB_gen_file)
+                vutils.save_image(model.get_AB_images_triple(), imAB_gen_file, normalize=True)
         e_end = time.time()
         e_time = e_end - e_begin
         print('End of epoch [{}/{}] Time taken: {:.4f} sec.'.format(e, args.epochs, e_time))

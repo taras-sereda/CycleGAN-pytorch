@@ -94,6 +94,6 @@ ENV/
 
 notes.md
 notebooks
-results
+results*
 .idea
 .DS_Store

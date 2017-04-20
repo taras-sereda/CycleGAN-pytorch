@@ -130,7 +130,7 @@ class ModelsTest(unittest.TestCase):
         model.real_A.data.resize_(image.size()).copy_(image)
         model.real_B.data.resize_(image.size()).copy_(image)
         start = time.time()
-        model.optimizeParameters()
+        model.optimize_parameters()
         end = time.time()
         print(end-start)
 
