@@ -36,6 +36,7 @@ parser.add_argument('--log_interval', default=50, type=int)
 parser.add_argument('--num_workers', default=2, type=int)
 parser.add_argument('--shuffle', action='store_true')
 parser.add_argument('--display_id', default=1)
+parser.add_argument('--backward_type', default='fused')
 args = parser.parse_args()
 
 try:
@@ -63,6 +64,7 @@ data_loader = UnalignedDataLoader(args)
 dataset = data_loader.load_data()
 visualizer = Visualizer(args)
 
+
 def train():
     model = CycleGAN(params=args)
     model.train()
@@ -71,7 +73,7 @@ def train():
         for batch_idx, inputs in enumerate(dataset):
             model.set_inputs(inputs)
             model.optimize_parameters()
-            e_fraction_passed = batch_idx * args.batch_size/len(dataset.data_loader_A)
+            e_fraction_passed = batch_idx * args.batch_size / len(dataset.data_loader_A)
             if batch_idx % args.log_interval == 0:
                 err = model.get_errors()
                 visualizer.plot_errors(err, e, e_fraction_passed)

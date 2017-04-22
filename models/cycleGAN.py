@@ -28,7 +28,7 @@ class CycleGAN(BaseModel):
         self.cuda = params.cuda
         self.use_lsgan = params.use_lsgan
         self.use_sigmoid = not params.use_lsgan
-
+        self.backward_type = params.backward_type
         self.lambda_A = 10
         self.lambda_B = 10
 
@@ -231,7 +231,7 @@ class CycleGAN(BaseModel):
         self.backward_D_A()
         self.backward_D_B()
 
-    def optimize_parameters(self):
+    def optimize_parameters_separate(self):
 
         self.forward()
 
@@ -239,6 +239,13 @@ class CycleGAN(BaseModel):
         self.backward_D_A()
         self.backward_G_B()
         self.backward_D_B()
+
+    def optimize_parameters(self):
+
+        if self.backward_type == 'fused':
+            self.optimize_parameters_fused()
+        elif self.backward_type == 'separate':
+            self.optimize_parameters_separate()
 
     def loss_variable2scalar(self, var):
         if self.cuda:

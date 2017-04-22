@@ -4,6 +4,7 @@ import numpy as np
 class Visualizer(object):
     def __init__(self, opt):
         self.display_id = opt.display_id
+        self.title = 'training loss {}'.format(opt.backward_type)
         if opt.display_id > 0:
             import visdom
             self.vis = visdom.Visdom()
@@ -22,7 +23,7 @@ class Visualizer(object):
             X=np.stack([self.plot_data['X']] * len(self.plot_data['legend']), 1),
             Y=np.array(self.plot_data['Y']),
             opts={
-                'title': 'training loss',
+                'title': self.title,
                 'legend': self.plot_data['legend'],
                 'xlabel': 'epoch',
                 'ylabel': 'loss'},
