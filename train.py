@@ -36,6 +36,7 @@ parser.add_argument('--num_workers', default=2, type=int)
 parser.add_argument('--shuffle', action='store_true')
 parser.add_argument('--display_id', default=1, type=int)
 parser.add_argument('--backward_type', default='fused')
+parser.add_argument('--continue_training_epoch', default=99, type=int)
 args = parser.parse_args()
 
 try:
@@ -61,6 +62,7 @@ visualizer = Visualizer(args)
 def train():
     model = CycleGAN(params=args)
     model.train()
+
     for e in range(args.epochs):
         e_begin = time.time()
         for batch_idx, inputs in enumerate(dataset):

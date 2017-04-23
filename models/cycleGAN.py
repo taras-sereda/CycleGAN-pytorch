@@ -211,14 +211,14 @@ class CycleGAN(BaseModel):
         self.loss_G_A = self.criterionGAN(output, self.real_label_A)
 
         self.rec_A = self.netG_B(self.fake_B)
-        self.loss_cycle_A = self.criterionRec(self.rec_A, self.real_A)
+        self.loss_cycle_A = self.criterionRec(self.rec_A, self.real_A) * self.lambda_A
 
         self.fake_A = self.netG_B(self.real_B)
         output = self.netD_B(self.fake_A)
         self.loss_G_B = self.criterionGAN(output, self.real_label_B)
 
         self.rec_B = self.netG_A(self.fake_A)
-        self.loss_cycle_B = self.criterionRec(self.rec_B, self.real_B)
+        self.loss_cycle_B = self.criterionRec(self.rec_B, self.real_B) * self.lambda_B
 
         self.loss_G = self.loss_G_A + self.loss_cycle_A + self.loss_G_B + self.loss_cycle_B
         self.loss_G.backward()
