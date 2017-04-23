@@ -1,4 +1,5 @@
 import itertools
+import os
 from collections import OrderedDict
 
 import torch
@@ -29,6 +30,7 @@ class CycleGAN(BaseModel):
         self.use_lsgan = params.use_lsgan
         self.use_sigmoid = not params.use_lsgan
         self.backward_type = params.backward_type
+        self.save_path = params.save_path
         self.lambda_A = 10
         self.lambda_B = 10
 
@@ -285,3 +287,23 @@ class CycleGAN(BaseModel):
         for k, v in errors.items():
             errors_str += '{}={:.4f} '.format(k, v)
         return errors_str
+
+    def save_parameters(self, epoch):
+        model_file_G_A = os.path.join(self.save_path, 'model_G_A_{}.pth'.format(epoch))
+        model_file_G_B = os.path.join(self.save_path, 'model_G_B_{}.pth'.format(epoch))
+        model_file_D_A = os.path.join(self.save_path, 'model_D_A_{}.pth'.format(epoch))
+        model_file_D_B = os.path.join(self.save_path, 'model_D_B_{}.pth'.format(epoch))
+        torch.save(self.netG_A.state_dict(), model_file_G_A)
+        torch.save(self.netG_B.state_dict(), model_file_G_B)
+        torch.save(self.netD_A.state_dict(), model_file_D_A)
+        torch.save(self.netD_B.state_dict(), model_file_D_B)
+
+    def load_parameters(self, epoch):
+        model_file_G_A = os.path.join(self.save_path, 'model_G_A_{}.pth'.format(epoch))
+        model_file_G_B = os.path.join(self.save_path, 'model_G_B_{}.pth'.format(epoch))
+        model_file_D_A = os.path.join(self.save_path, 'model_D_A_{}.pth'.format(epoch))
+        model_file_D_B = os.path.join(self.save_path, 'model_D_B_{}.pth'.format(epoch))
+        self.netG_A.load_state_dict(torch.load(model_file_G_A))
+        self.netG_B.load_state_dict(torch.load(model_file_G_B))
+        self.netD_A.load_state_dict(torch.load(model_file_D_A))
+        self.netD_B.load_state_dict(torch.load(model_file_D_B))
