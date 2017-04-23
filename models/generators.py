@@ -7,9 +7,9 @@ from models.base import normalization
 
 
 class GeneratorCNN(BaseModel):
-    def __init__(self, in_channels, out_channels, num_filters=64):
+    def __init__(self, name, in_channels, out_channels, num_filters=64):
         super(GeneratorCNN, self).__init__()
-
+        self.name = name
         self.in_planes = in_channels
         self.num_res_blocks = 6
         self.padding = 3

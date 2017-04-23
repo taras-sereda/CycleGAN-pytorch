@@ -11,8 +11,9 @@ class DiscriminatorCNN(BaseModel):
     """Defines patch GAN discriminator.
     """
 
-    def __init__(self, in_channels, num_filters=64, use_sigmoid=True):
+    def __init__(self, name, in_channels, num_filters=64, use_sigmoid=True):
         super(DiscriminatorCNN, self).__init__()
+        self.name = name
         self.in_channels = in_channels
         self.use_sigmoid = use_sigmoid
         self.n_layers = 3

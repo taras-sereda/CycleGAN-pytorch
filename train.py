@@ -35,7 +35,7 @@ parser.add_argument('--log_interval', default=50, type=int)
 parser.add_argument('--num_workers', default=2, type=int)
 parser.add_argument('--shuffle', action='store_true')
 parser.add_argument('--display_id', default=1, type=int)
-parser.add_argument('--backward_type', default='fused')
+parser.add_argument('--backward_type', default='separate')
 parser.add_argument('--continue_epoch', default=99, type=int)
 args = parser.parse_args()
 

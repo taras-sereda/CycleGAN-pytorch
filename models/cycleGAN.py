@@ -45,20 +45,20 @@ class CycleGAN(BaseModel):
 
         self.input_A = torch.Tensor(*self.shape_A)
         self.input_B = torch.Tensor(*self.shape_B)
-        if params.train:
-            self.real_A = Variable(torch.Tensor(*self.shape_A))
-            self.real_B = Variable(torch.Tensor(*self.shape_B))
-            self.fake_A = Variable(torch.Tensor(*self.shape_A))
-            self.fake_B = Variable(torch.Tensor(*self.shape_B))
-            self.rec_A = Variable(torch.Tensor(*self.shape_A))
-            self.rec_B = Variable(torch.Tensor(*self.shape_B))
+
+        self.real_A = Variable(torch.Tensor(*self.shape_A))
+        self.real_B = Variable(torch.Tensor(*self.shape_B))
+        self.fake_A = Variable(torch.Tensor(*self.shape_A))
+        self.fake_B = Variable(torch.Tensor(*self.shape_B))
+        self.rec_A = Variable(torch.Tensor(*self.shape_A))
+        self.rec_B = Variable(torch.Tensor(*self.shape_B))
 
         # models
-        self.netG_A = GeneratorCNN(params.input_nc, params.output_nc)
-        self.netG_B = GeneratorCNN(params.input_nc, params.output_nc)
+        self.netG_A = GeneratorCNN(name='G_A', in_channels=params.input_nc, out_channels=params.output_nc)
+        self.netG_B = GeneratorCNN(name='G_B', in_channels=params.input_nc, out_channels=params.output_nc)
 
-        self.netD_A = DiscriminatorCNN(params.input_nc, use_sigmoid=self.use_sigmoid)
-        self.netD_B = DiscriminatorCNN(params.input_nc, use_sigmoid=self.use_sigmoid)
+        self.netD_A = DiscriminatorCNN(name='D_A', in_channels=params.input_nc, use_sigmoid=self.use_sigmoid)
+        self.netD_B = DiscriminatorCNN(name='D_B', in_channels=params.input_nc, use_sigmoid=self.use_sigmoid)
 
         # criterions
         self.criterionGAN = torch.nn.MSELoss()
@@ -73,13 +73,14 @@ class CycleGAN(BaseModel):
         self.real_label_B = Variable(torch.Tensor(D_B_size).fill_(0.9))
 
         # optimizers
-        self.netG_AB_optim = optim.Adam(itertools.chain(self.netG_A.parameters(),
-                                                        self.netG_B.parameters()),
-                                        lr=params.lr, betas=(params.beta1, 0.999))
-        self.netG_A_optim = optim.Adam(self.netG_A.parameters(), lr=params.lr, betas=(params.beta1, 0.999))
-        self.netG_B_optim = optim.Adam(self.netG_B.parameters(), lr=params.lr, betas=(params.beta1, 0.999))
-        self.netD_A_optim = optim.Adam(self.netD_A.parameters(), lr=params.lr, betas=(params.beta1, 0.999))
-        self.netD_B_optim = optim.Adam(self.netD_B.parameters(), lr=params.lr, betas=(params.beta1, 0.999))
+        if params.train:
+            self.netG_AB_optim = optim.Adam(itertools.chain(self.netG_A.parameters(),
+                                                            self.netG_B.parameters()),
+                                            lr=params.lr, betas=(params.beta1, 0.999))
+            self.netG_A_optim = optim.Adam(self.netG_A.parameters(), lr=params.lr, betas=(params.beta1, 0.999))
+            self.netG_B_optim = optim.Adam(self.netG_B.parameters(), lr=params.lr, betas=(params.beta1, 0.999))
+            self.netD_A_optim = optim.Adam(self.netD_A.parameters(), lr=params.lr, betas=(params.beta1, 0.999))
+            self.netD_B_optim = optim.Adam(self.netD_B.parameters(), lr=params.lr, betas=(params.beta1, 0.999))
 
         if params.cuda:
             if params.num_gpu == 1:
@@ -123,6 +124,9 @@ class CycleGAN(BaseModel):
         self.real_B = Variable(self.input_B)
 
     def test_model(self):
+        """test model
+        real_A -> fake_B -> rec_A
+        real_B -> fake_A -> rec_B"""
         self.real_A = Variable(self.input_A, volatile=True)
         self.fake_B = self.netG_A(self.real_A)
         self.rec_A = self.netG_B(self.fake_B)
@@ -299,12 +303,46 @@ class CycleGAN(BaseModel):
         torch.save(self.netD_B.state_dict(), model_file_D_B)
 
     def load_parameters(self, epoch):
-        print('loading model parameters from epoch '.format(epoch))
+        print('loading model parameters from epoch {}...'.format(epoch))
+        map2device = lambda storage, loc: storage
         model_file_G_A = os.path.join(self.save_path, 'model_G_A_{}.pth'.format(epoch))
         model_file_G_B = os.path.join(self.save_path, 'model_G_B_{}.pth'.format(epoch))
         model_file_D_A = os.path.join(self.save_path, 'model_D_A_{}.pth'.format(epoch))
         model_file_D_B = os.path.join(self.save_path, 'model_D_B_{}.pth'.format(epoch))
-        self.netG_A.load_state_dict(torch.load(model_file_G_A))
-        self.netG_B.load_state_dict(torch.load(model_file_G_B))
-        self.netD_A.load_state_dict(torch.load(model_file_D_A))
-        self.netD_B.load_state_dict(torch.load(model_file_D_B))
+        self.netG_A.load_state_dict(torch.load(model_file_G_A, map_location=map2device))
+        self.netG_B.load_state_dict(torch.load(model_file_G_B, map_location=map2device))
+        self.netD_A.load_state_dict(torch.load(model_file_D_A, map_location=map2device))
+        self.netD_B.load_state_dict(torch.load(model_file_D_B, map_location=map2device))
+        print('model parameters loaded successfully')
+
+    @staticmethod
+    def __print_model_desc(model):
+        print('[Model {name} generator architecture]'.format(name=model.name))
+        for idx, m in enumerate(model.modules()):
+            print(idx, '->', m)
+
+    @staticmethod
+    def __get_model_params_num(model):
+
+        get_params = lambda p: p.numel()
+        model_params = model.parameters()
+        model_params_num = sum(map(get_params, model_params))
+        return model_params_num
+
+    def print_model_desription(self):
+
+        net_G_A_params_num = CycleGAN.__get_model_params_num(self.netG_A)
+        net_D_A_params_num = CycleGAN.__get_model_params_num(self.netD_A)
+        net_G_B_params_num = CycleGAN.__get_model_params_num(self.netG_B)
+        net_D_B_params_num = CycleGAN.__get_model_params_num(self.netD_B)
+        total_params_num = sum([net_G_A_params_num, net_D_A_params_num,
+                                net_G_B_params_num, net_D_B_params_num])
+        print('[Model {} params num: {}]'.format(self.netG_A.name, net_G_A_params_num))
+        print('[Model {} params num: {}]'.format(self.netD_A.name, net_D_A_params_num))
+        print('[Model {} params num: {}]'.format(self.netG_B.name, net_G_B_params_num))
+        print('[Model {} params num: {}]'.format(self.netD_B.name, net_D_B_params_num))
+        print('[Total CycleGAN params: {}]'.format(total_params_num))
+        CycleGAN.__print_model_desc(self.netG_A)
+        CycleGAN.__print_model_desc(self.netD_A)
+        CycleGAN.__print_model_desc(self.netG_B)
+        CycleGAN.__print_model_desc(self.netD_B)
