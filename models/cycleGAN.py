@@ -299,6 +299,7 @@ class CycleGAN(BaseModel):
         torch.save(self.netD_B.state_dict(), model_file_D_B)
 
     def load_parameters(self, epoch):
+        print('loading model parameters from epoch '.format(epoch))
         model_file_G_A = os.path.join(self.save_path, 'model_G_A_{}.pth'.format(epoch))
         model_file_G_B = os.path.join(self.save_path, 'model_G_B_{}.pth'.format(epoch))
         model_file_D_A = os.path.join(self.save_path, 'model_D_A_{}.pth'.format(epoch))
