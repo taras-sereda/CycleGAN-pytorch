@@ -33,6 +33,7 @@ class CycleGAN(BaseModel):
         self.save_path = params.save_path
         self.lambda_A = 10
         self.lambda_B = 10
+        self.identity = params.identity
 
         # fake pools
         if params.train:
@@ -164,6 +165,8 @@ class CycleGAN(BaseModel):
 
     def backward_basic_G(self, netG, netD, netE, real, real2, real_label, lambda1, lambda2):
 
+        identity = self.identity
+
         # log(D_A(G_A(A)))
         fake = netG.forward(real)
         output = netD.forward(fake)
@@ -174,6 +177,14 @@ class CycleGAN(BaseModel):
         loss_Rec = self.criterionRec(rec, real) * lambda1
 
         loss_total = loss_GAN + loss_Rec
+
+        if identity > 0:
+            # usefull for photo -> painting
+            # for preserving colors composition
+            identity2 = netG.forward(real2)
+            loss_identity = self.criterionRec(identity2, real2) * lambda1 * identity
+            loss_total += loss_identity
+
         loss_total.backward()
 
         # backward cycle
@@ -208,6 +219,10 @@ class CycleGAN(BaseModel):
 
     def backward_G(self):
 
+        identity = self.identity
+        lambda_A = self.lambda_A
+        lambda_B = self.lambda_B
+
         self.netG_AB_optim.zero_grad()
 
         self.fake_B = self.netG_A(self.real_A)
@@ -215,16 +230,25 @@ class CycleGAN(BaseModel):
         self.loss_G_A = self.criterionGAN(output, self.real_label_A)
 
         self.rec_A = self.netG_B(self.fake_B)
-        self.loss_cycle_A = self.criterionRec(self.rec_A, self.real_A) * self.lambda_A
+        self.loss_cycle_A = self.criterionRec(self.rec_A, self.real_A) * lambda_A
 
         self.fake_A = self.netG_B(self.real_B)
         output = self.netD_B(self.fake_A)
         self.loss_G_B = self.criterionGAN(output, self.real_label_B)
 
         self.rec_B = self.netG_A(self.fake_A)
-        self.loss_cycle_B = self.criterionRec(self.rec_B, self.real_B) * self.lambda_B
+        self.loss_cycle_B = self.criterionRec(self.rec_B, self.real_B) * lambda_B
 
         self.loss_G = self.loss_G_A + self.loss_cycle_A + self.loss_G_B + self.loss_cycle_B
+
+        if identity > 0:
+            identity_A = self.netG_A(self.real_B)
+            loss_identity_A = self.criterionRec(identity_A, self.real_B) * lambda_A * identity
+
+            identity_B = self.netG_B(self.real_A)
+            loss_identity_B = self.criterionRec(identity_B, self.real_A) * lambda_B * identity
+
+            self.loss_G += loss_identity_A + loss_identity_B
         self.loss_G.backward()
 
         self.netG_AB_optim.step()

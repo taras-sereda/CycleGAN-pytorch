@@ -37,6 +37,7 @@ parser.add_argument('--shuffle', action='store_true')
 parser.add_argument('--display_id', default=1, type=int)
 parser.add_argument('--backward_type', default='separate')
 parser.add_argument('--continue_epoch', default=99, type=int)
+parser.add_argument('--identity', default=0.0, type=float) #oroginaly used for photo -> painting translations
 args = parser.parse_args()
 
 try:
