@@ -5,11 +5,10 @@ import time
 
 import torch.utils.data
 import torchvision.utils as vutils
-import matplotlib.pyplot as plt
 
 from models.cycleGAN import CycleGAN
 from data.pairs_dataset import UnalignedDataLoader
-from util.visualizer import Visualizer
+from util.visualisations import Visualizer
 
 parser = argparse.ArgumentParser('CycleGAN train')
 parser.add_argument('--dir_A', default='/Users/taras/datasets/horse2zebra/A')
@@ -54,12 +53,6 @@ def set_random_seed(seed, cuda):
 
 set_random_seed(args.seed, args.cuda)
 
-
-def show(img):
-    npimg = img.numpy()
-    plt.imshow(npimg.transpose(1, 2, 0))
-
-
 data_loader = UnalignedDataLoader(args)
 dataset = data_loader.load_data()
 visualizer = Visualizer(args)
@@ -87,7 +80,8 @@ def train():
         e_end = time.time()
         e_time = e_end - e_begin
         print('End of epoch [{}/{}] Time taken: {:.4f} sec.'.format(e, args.epochs, e_time))
-    torch.save(model.state_dict(), model_file)
+        model.save_parameters(args.epochs)
+
 
 
 if __name__ == '__main__':

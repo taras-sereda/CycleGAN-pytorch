@@ -94,6 +94,7 @@ ENV/
 
 notes.md
 notebooks
+plots
 results*
 .idea
 .DS_Store

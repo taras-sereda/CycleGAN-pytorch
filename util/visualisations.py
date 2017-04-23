@@ -1,4 +1,10 @@
 import numpy as np
+import matplotlib.pyplot as plt
+
+
+def show(img):
+    npimg = img.numpy()
+    plt.imshow(npimg.transpose(1, 2, 0))
 
 
 class Visualizer(object):
