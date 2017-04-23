@@ -81,11 +81,14 @@ def train():
             if batch_idx % args.vis_interval == 0:
                 imAB_gen_file = os.path.join(args.save_path, 'imAB_gen_{}_{}.jpg'.format(e, batch_idx))
                 vutils.save_image(model.get_AB_images_triple(), imAB_gen_file, normalize=True)
+            if batch_idx % args.save_interval == 0:
+                model.save_parameters(e)
         e_end = time.time()
         e_time = e_end - e_begin
         print('End of epoch [{}/{}] Time taken: {:.4f} sec.'.format(e, args.epochs, e_time))
-        model.save_parameters(args.epochs)
 
+    print('saving final model paramaters')
+    model.save_parameters(args.epochs)
 
 
 if __name__ == '__main__':
