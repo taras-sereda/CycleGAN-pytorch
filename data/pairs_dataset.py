@@ -1,7 +1,8 @@
 import torch
 from torch.utils.data import DataLoader
-from torchvision import datasets
 from torchvision import transforms
+
+from data.image_folder import ImageFolder
 
 
 class PairedData(object):
@@ -31,12 +32,14 @@ class UnalignedDataLoader(object):
                                  (0.5, 0.5, 0.5))
         ])
         dataset_A = torch.utils.data.DataLoader(
-            datasets.ImageFolder(params.dir_A, transform),
+            ImageFolder(root=params.data_root + '/' + params.phase + 'A',
+                        transform=transform),
             num_workers=params.num_workers,
             shuffle=params.shuffle)
 
         dataset_B = torch.utils.data.DataLoader(
-            datasets.ImageFolder(params.dir_B, transform),
+            ImageFolder(root=params.data_root + '/' + params.phase + 'B',
+                        transform=transform),
             num_workers=params.num_workers,
             shuffle=params.shuffle)
 

@@ -11,8 +11,7 @@ from data.pairs_dataset import UnalignedDataLoader
 from util.visualisations import Visualizer
 
 parser = argparse.ArgumentParser('CycleGAN train')
-parser.add_argument('--dir_A', default='/Users/taras/datasets/horse2zebra/A')
-parser.add_argument('--dir_B', default='/Users/taras/datasets/horse2zebra/B')
+parser.add_argument('--data_root', default='/Users/taras/datasets/horse2zebra', type=str)
 parser.add_argument('--width', default=128, type=int)
 parser.add_argument('--height', default=128, type=int)
 parser.add_argument('--load_size', default=142, type=int)
@@ -26,7 +25,7 @@ parser.add_argument('--output_nc', default=3, type=int)
 parser.add_argument('--use_lsgan', default=True, type=bool)
 parser.add_argument('--train', default=True, type=bool)
 parser.add_argument('--seed', default=42, type=int)
-parser.add_argument('--cuda', action='store_true')
+parser.add_argument('--cuda', default=True, action='store_true')
 parser.add_argument('--num_gpu', default=1, type=int)
 parser.add_argument('--save_path', default='./results', type=str)
 parser.add_argument('--save_interval', default=1000, type=int)
@@ -36,9 +35,13 @@ parser.add_argument('--num_workers', default=2, type=int)
 parser.add_argument('--shuffle', action='store_true')
 parser.add_argument('--display_id', default=1, type=int)
 parser.add_argument('--backward_type', default='separate')
-parser.add_argument('--continue_epoch', default=99, type=int)
+parser.add_argument('--continue_epoch', default=-1, type=int)
 parser.add_argument('--identity', default=0.0, type=float) #oroginaly used for photo -> painting translations
+parser.add_argument('--phase', default='train', type=str)
 args = parser.parse_args()
+
+for k,v in vars(args).items():
+    print('{:20} = {}'.format(k,v))
 
 try:
     os.makedirs(args.save_path)

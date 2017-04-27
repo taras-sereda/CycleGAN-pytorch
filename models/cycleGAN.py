@@ -329,10 +329,12 @@ class CycleGAN(BaseModel):
     def load_parameters(self, epoch):
         print('loading model parameters from epoch {}...'.format(epoch))
         map2device = lambda storage, loc: storage
+
         model_file_G_A = os.path.join(self.save_path, 'model_G_A_{}.pth'.format(epoch))
         model_file_G_B = os.path.join(self.save_path, 'model_G_B_{}.pth'.format(epoch))
         model_file_D_A = os.path.join(self.save_path, 'model_D_A_{}.pth'.format(epoch))
         model_file_D_B = os.path.join(self.save_path, 'model_D_B_{}.pth'.format(epoch))
+
         self.netG_A.load_state_dict(torch.load(model_file_G_A, map_location=map2device))
         self.netG_B.load_state_dict(torch.load(model_file_G_B, map_location=map2device))
         self.netD_A.load_state_dict(torch.load(model_file_D_A, map_location=map2device))
