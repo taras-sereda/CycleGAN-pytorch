@@ -98,3 +98,9 @@ plots
 results*
 .idea
 .DS_Store
+
+amos_d2n_results_separate
+
+#hidden part
+create_day2night_dataset.py
+scripts/train_day2night_fused.sh
